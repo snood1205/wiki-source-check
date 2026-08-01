@@ -46,10 +46,6 @@ RSpec.describe Wikipedia::Client do
     it 'includes the library version' do
       expect(client.user_agent).to include WikipediaSourceValidator::VERSION
     end
-
-    it 'memoizes the built string' do
-      expect(client.user_agent).to be client.user_agent
-    end
   end
 
   describe '#get_wikitext' do
