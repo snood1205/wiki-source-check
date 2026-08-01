@@ -48,7 +48,7 @@ RSpec.describe Wikipedia::Client do
     end
 
     it 'memoizes the built string' do
-      expect(client.user_agent).to equal client.user_agent
+      expect(client.user_agent).to be client.user_agent
     end
   end
 

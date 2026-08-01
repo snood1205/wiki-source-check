@@ -178,8 +178,6 @@ RSpec.describe Wikipedia::API do
                                         .tap { |e| e.set_backtrace ['first_frame.rb:1', 'second_frame.rb:2'] }
     end
 
-    # Memoize up front so the output matchers hold regardless of construction
-    # order; they redirect the file descriptor rather than swapping $stderr.
     before { client.logger }
 
     it 'defaults to a Logger instance' do
@@ -195,7 +193,7 @@ RSpec.describe Wikipedia::API do
       expect(client.logger).to equal client.logger
     end
 
-    it 'can be overridden via logger=' do
+    it 'can be overridden via #logger=' do
       custom_logger = Logger.new(File::NULL)
 
       client.logger = custom_logger
@@ -220,7 +218,7 @@ RSpec.describe Wikipedia::API do
         ).to_stderr_from_any_process
     end
 
-    it 'does not blow up on an exception with no backtrace' do
+    it 'works with an exception with no backtrace' do
       expect { client.logger.error Wikipedia::Exceptions::NotFoundException.new('no page') }
         .to output(/no page \(Wikipedia::Exceptions::NotFoundException\)/).to_stderr_from_any_process
     end

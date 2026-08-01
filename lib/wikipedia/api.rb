@@ -14,11 +14,9 @@ module Wikipedia
 
     MAX_RETRIES = 3
 
-    # Mirrors Logger's default format, including its Exception handling, but
-    # repeats the prefix on every line so that multi-line messages stay
-    # greppable and group correctly downstream. Blank lines are left bare
-    # rather than emitting a line consisting only of a prefix.
+    # Mirrors Logger's default format, but repeats the prefix on every line
     LOG_FORMATTER = proc do |severity, datetime, progname, message|
+      # Format is 1970-01-01T00:00:00.000000
       timestamp = datetime.strftime '%Y-%m-%dT%H:%M:%S.%6N'
       prefix = "#{severity[0]}, [#{timestamp} ##{Process.pid}] #{severity.rjust(5)} -- #{progname}: "
 
