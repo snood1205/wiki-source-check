@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'logger'
 require_relative 'exceptions/max_retries_exception'
 require_relative 'exceptions/not_found_exception'
 require_relative 'exceptions/server_error'
@@ -9,8 +10,30 @@ module Wikipedia
   # The main module for interacting with the Wikipedia API
   module API
     attr_reader :api_endpoint
+    attr_writer :logger
 
     MAX_RETRIES = 3
+
+    # Mirrors Logger's default format, including its Exception handling, but
+    # repeats the prefix on every line so that multi-line messages stay
+    # greppable and group correctly downstream. Blank lines are left bare
+    # rather than emitting a line consisting only of a prefix.
+    LOG_FORMATTER = proc do |severity, datetime, progname, message|
+      timestamp = datetime.strftime '%Y-%m-%dT%H:%M:%S.%6N'
+      prefix = "#{severity[0]}, [#{timestamp} ##{Process.pid}] #{severity.rjust(5)} -- #{progname}: "
+
+      body = case message
+             when ::String then message
+             when ::Exception then "#{message.message} (#{message.class})\n#{(message.backtrace || []).join("\n")}"
+             else message.inspect
+             end
+
+      body.chomp.lines.map { |line| line.chomp.empty? ? "\n" : "#{prefix}#{line.chomp}\n" }.join
+    end
+
+    def logger
+      @logger ||= Logger.new($stderr, formatter: LOG_FORMATTER)
+    end
 
     def make_request(title, retries = 0, **additional_params)
       query = params title, additional_params
@@ -45,7 +68,7 @@ module Wikipedia
 
       retry_after = response.headers['retry-after']&.to_i || 5
 
-      warn <<~WARNING
+      logger.warn <<~WARNING
         Access rate limited on [[#{title}]]...
         Waiting #{retry_after} seconds before retrying...
       WARNING
