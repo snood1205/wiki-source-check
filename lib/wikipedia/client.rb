@@ -12,9 +12,10 @@ module Wikipedia
 
     attr_reader :username
 
-    def initialize(username:, language: 'en')
+    def initialize(username:, language: 'en', logger: nil)
       @username = username
       @api_endpoint = "https://#{language}.wikipedia.org/w/api.php"
+      @logger = logger
     end
 
     def user_agent

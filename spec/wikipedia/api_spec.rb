@@ -31,6 +31,8 @@ RSpec.describe Wikipedia::API do
   end
 
   describe '#make_request' do
+    before { client.logger = Logger.new(File::NULL) }
+
     context 'when the response is successful' do
       before do
         stub_request(:get, client.api_endpoint)
@@ -88,6 +90,14 @@ RSpec.describe Wikipedia::API do
 
         expect(WebMock).to have_requested(:get, client.api_endpoint)
           .with(query: hash_including(titles: title)).twice
+      end
+
+      it 'logs a warning about the rate limit' do
+        allow(client.logger).to receive(:warn)
+
+        client.make_request title
+
+        expect(client.logger).to have_received(:warn).with(a_string_including("Access rate limited on [[#{title}]]"))
       end
     end
 
@@ -159,6 +169,63 @@ RSpec.describe Wikipedia::API do
         expect { client.make_request title }
           .to raise_error Wikipedia::Exceptions::UnexpectedResponseException, /403/
       end
+    end
+  end
+
+  describe '#logger' do
+    let(:error) do
+      Wikipedia::Exceptions::ServerError.new('upstream exploded')
+                                        .tap { |e| e.set_backtrace ['first_frame.rb:1', 'second_frame.rb:2'] }
+    end
+
+    before { client.logger }
+
+    it 'defaults to a Logger instance' do
+      expect(client.logger).to be_a Logger
+    end
+
+    it 'writes to stderr by default' do
+      expect { client.logger.warn 'a default logger message' }
+        .to output(/a default logger message/).to_stderr_from_any_process
+    end
+
+    it 'memoizes the default logger' do
+      expect(client.logger).to equal client.logger
+    end
+
+    it 'can be overridden via #logger=' do
+      custom_logger = Logger.new(File::NULL)
+
+      client.logger = custom_logger
+
+      expect(client.logger).to equal custom_logger
+    end
+
+    it 'repeats the severity prefix on every line of a multi-line message' do
+      expect { client.logger.warn "first line\nsecond line" }
+        .to output(/WARN -- : first line\n.*WARN -- : second line\n\z/).to_stderr_from_any_process
+    end
+
+    it 'leaves blank lines bare rather than emitting a prefix-only line' do
+      expect { client.logger.warn "a\n\nb" }
+        .to output(/WARN -- : a\n\n.*WARN -- : b\n\z/).to_stderr_from_any_process
+    end
+
+    it 'includes the class and backtrace when logging an exception' do
+      expect { client.logger.error error }
+        .to output(
+          /upstream exploded \(Wikipedia::Exceptions::ServerError\)\n.*first_frame\.rb:1\n.*second_frame\.rb:2\n\z/
+        ).to_stderr_from_any_process
+    end
+
+    it 'works with an exception with no backtrace' do
+      expect { client.logger.error Wikipedia::Exceptions::NotFoundException.new('no page') }
+        .to output(/no page \(Wikipedia::Exceptions::NotFoundException\)/).to_stderr_from_any_process
+    end
+
+    it 'inspects non-string, non-exception messages' do
+      expect { client.logger.warn({ code: 429 }) }
+        .to output(/WARN -- : \{.*429.*\}/).to_stderr_from_any_process
     end
   end
 

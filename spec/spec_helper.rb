@@ -17,7 +17,7 @@
 # See https://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 require 'httparty'
 require_relative '../lib/wikipedia/api'
-require_relative '../lib/wikipedia/exceptions/max_retries_exception'
+require_relative '../lib/wikipedia/client'
 require_relative 'support/webmock'
 
 RSpec.configure do |config|
