@@ -46,7 +46,7 @@ module Wikipedia
 
       def scan(scanner)
         until scanner.eos?
-          scanner.skip /[^<]+/
+          scanner.skip(/[^<]+/)
           break if scanner.eos?
 
           consume scanner
