@@ -18,6 +18,7 @@
 require 'httparty'
 require_relative '../lib/wikipedia/api'
 require_relative '../lib/wikipedia/client'
+require_relative '../lib/wikipedia/wikitext/ref_parser'
 require_relative 'support/webmock'
 
 RSpec.configure do |config|
