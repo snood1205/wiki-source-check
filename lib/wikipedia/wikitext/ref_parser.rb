@@ -1,12 +1,14 @@
 # frozen_string_literal: true
 
-require 'strscan'
+require_relative 'parser'
 require_relative 'ref'
 
 module Wikipedia
   module Wikitext
     # Extracts <ref> tags from wikitext.
     class RefParser
+      include Parser
+
       COMMENT = /<!--.*?-->/m
       NOWIKI = %r{<nowiki(?:\s[^>]*)?>.*?</nowiki\s*>|<nowiki\s*/>}mi
       PRE = %r{<pre(?:\s[^>]*)?>.*?</pre\s*>|<pre\s*/>}mi
@@ -16,59 +18,23 @@ module Wikipedia
 
       ATTRIBUTE = /(?<key>\w+)\s*=\s*(?:"(?<quoted>[^"]*)"|'(?<single>[^']*)'|(?<bare>[^\s"'>]+))/
 
-      attr_reader :wikitext
-
-      def initialize(wikitext)
-        @wikitext = wikitext.to_s
-      end
-
-      def refs
-        return @refs if @refs
-
-        parse
-        @refs
-      end
-
-      def unclosed
-        return @unclosed if @unclosed
-
-        parse
-        @unclosed
-      end
+      def refs = closed
 
       private
 
-      def parse
-        @refs = []
-        @unclosed = []
-        scan StringScanner.new(wikitext)
-      end
+      def outside = /[^<]+/
 
-      def scan(scanner)
-        until scanner.eos?
-          scanner.skip(/[^<]+/)
-          break if scanner.eos?
+      def opener = OPEN_REF
 
-          consume scanner
-        end
-      end
-
-      def consume(scanner)
-        return if scanner.skip IGNORE
-
-        offset = scanner.pos
-        return scanner.getch unless scanner.scan(OPEN_REF)
-
-        record scanner, offset
-      end
+      def ignore = IGNORE
 
       def record(scanner, offset)
         attributes = parse_attributes scanner[:attributes]
 
         if scanner[:self_closing]
-          @refs << build_ref(attributes, nil, self_closing: true, offset:)
+          @closed << build_ref(attributes, nil, self_closing: true, offset:)
         elsif (body = scanner.scan_until(%r{</ref\s*>}i))
-          @refs << build_ref(attributes, body[0...-scanner.matched.length], self_closing: false, offset:)
+          @closed << build_ref(attributes, body[0...-scanner.matched.length], self_closing: false, offset:)
         else
           @unclosed << build_ref(attributes, scanner.rest, self_closing: false, offset:)
           scanner.terminate
