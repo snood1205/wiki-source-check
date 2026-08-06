@@ -56,7 +56,7 @@ module Wikipedia
       def nest(scanner, segments)
         start = scanner.pos - TEMPLATE_OFFSET
         read scanner, start
-        segments.last << wikitext[start...scanner.pos]
+        segments.last << wikitext.byteslice(start, scanner.pos - start)
       end
 
       def build(segments, offset)

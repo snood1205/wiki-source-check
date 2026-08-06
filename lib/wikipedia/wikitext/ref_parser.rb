@@ -30,19 +30,25 @@ module Wikipedia
 
       def record(scanner, offset)
         attributes = parse_attributes scanner[:attributes]
+        content_offset = offset + scanner.matched.bytesize
 
-        if scanner[:self_closing]
-          @closed << build_ref(attributes, nil, self_closing: true, offset:)
-        elsif (body = scanner.scan_until(%r{</ref\s*>}i))
-          @closed << build_ref(attributes, body[0...-scanner.matched.length], self_closing: false, offset:)
+        return @closed << build_ref(attributes, nil, self_closing: true, offset:) if scanner[:self_closing]
+
+        record_body scanner, attributes, offset:, content_offset:
+      end
+
+      def record_body(scanner, attributes, offset:, content_offset:)
+        if (body = scanner.scan_until(%r{</ref\s*>}i))
+          content = body[0...-scanner.matched.length]
+          @closed << build_ref(attributes, content, self_closing: false, offset:, content_offset:)
         else
-          @unclosed << build_ref(attributes, scanner.rest, self_closing: false, offset:)
+          @unclosed << build_ref(attributes, scanner.rest, self_closing: false, offset:, content_offset:)
           scanner.terminate
         end
       end
 
-      def build_ref(attributes, content, self_closing:, offset:)
-        Ref.new name: attributes['name'], group: attributes['group'], content:, self_closing:, offset:
+      def build_ref(attributes, content, self_closing:, offset:, content_offset: nil)
+        Ref.new name: attributes['name'], group: attributes['group'], content:, content_offset:, self_closing:, offset:
       end
 
       def parse_attributes(attributes)

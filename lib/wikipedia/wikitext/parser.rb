@@ -10,8 +10,9 @@ module Wikipedia
     module Parser
       attr_reader :wikitext
 
-      def initialize(wikitext)
-        @wikitext = wikitext.to_s
+      def initialize(wikitext, offset: 0)
+        @wikitext = wikitext
+        @offset = offset
       end
 
       def self.parsed_attr(*attrs)
@@ -50,10 +51,10 @@ module Wikipedia
       def consume(scanner)
         return if ignore && scanner.skip(ignore)
 
-        offset = scanner.pos
+        scanner_offset = scanner.pos + @offset
         return scanner.getch unless scanner.scan(opener)
 
-        record scanner, offset
+        record scanner, scanner_offset
       end
     end
   end
