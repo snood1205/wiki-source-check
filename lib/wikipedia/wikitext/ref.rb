@@ -3,7 +3,7 @@
 module Wikipedia
   module Wikitext
     # A single <ref> tag extracted from wikitext.
-    Ref = Data.define(:name, :group, :content, :self_closing, :offset) do
+    Ref = Data.define(:name, :group, :content, :content_offset, :self_closing, :offset) do
       def self_closing? = self_closing
 
       def named? = !name.nil?

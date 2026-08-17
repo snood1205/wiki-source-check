@@ -3,14 +3,14 @@
 require 'spec_helper'
 
 RSpec.describe Wikipedia::Wikitext::RefParser do
-  subject(:parser) { described_class.new wikitext }
+  subject(:ref_parser) { described_class.new wikitext }
 
   describe '#refs' do
     context 'when the wikitext has no ref tags' do
       let(:wikitext) { 'Ruby is a programming language.' }
 
       it 'returns an empty array' do
-        expect(parser.refs).to be_empty
+        expect(ref_parser.refs).to be_empty
       end
     end
 
@@ -18,19 +18,19 @@ RSpec.describe Wikipedia::Wikitext::RefParser do
       let(:wikitext) { 'Ruby was created in 1995.<ref>{{cite web|title=Ruby}}</ref>' }
 
       it 'extracts a single reference' do
-        expect(parser.refs.size).to eq 1
+        expect(ref_parser.refs.size).to eq 1
       end
 
       it 'captures the content' do
-        expect(parser.refs.first.content).to eq '{{cite web|title=Ruby}}'
+        expect(ref_parser.refs.first.content).to eq '{{cite web|title=Ruby}}'
       end
 
       it 'has no name' do
-        expect(parser.refs.first).not_to be_named
+        expect(ref_parser.refs.first).not_to be_named
       end
 
       it 'is not self closing' do
-        expect(parser.refs.first).not_to be_self_closing
+        expect(ref_parser.refs.first).not_to be_self_closing
       end
     end
 
@@ -38,15 +38,15 @@ RSpec.describe Wikipedia::Wikitext::RefParser do
       let(:wikitext) { '<ref name="matz">Matsumoto 1995</ref>' }
 
       it 'captures the name' do
-        expect(parser.refs.first.name).to eq 'matz'
+        expect(ref_parser.refs.first.name).to eq 'matz'
       end
 
       it 'captures the content' do
-        expect(parser.refs.first.content).to eq 'Matsumoto 1995'
+        expect(ref_parser.refs.first.content).to eq 'Matsumoto 1995'
       end
 
       it 'is named' do
-        expect(parser.refs.first).to be_named
+        expect(ref_parser.refs.first).to be_named
       end
     end
 
@@ -54,7 +54,7 @@ RSpec.describe Wikipedia::Wikitext::RefParser do
       let(:wikitext) { "<ref name='matz'>Matsumoto 1995</ref>" }
 
       it 'captures the name' do
-        expect(parser.refs.first.name).to eq 'matz'
+        expect(ref_parser.refs.first.name).to eq 'matz'
       end
     end
 
@@ -62,7 +62,7 @@ RSpec.describe Wikipedia::Wikitext::RefParser do
       let(:wikitext) { '<ref name=matz>Matsumoto 1995</ref>' }
 
       it 'captures the name' do
-        expect(parser.refs.first.name).to eq 'matz'
+        expect(ref_parser.refs.first.name).to eq 'matz'
       end
     end
 
@@ -70,15 +70,19 @@ RSpec.describe Wikipedia::Wikitext::RefParser do
       let(:wikitext) { 'Reused here.<ref name="matz" />' }
 
       it 'is self closing' do
-        expect(parser.refs.first).to be_self_closing
+        expect(ref_parser.refs.first).to be_self_closing
       end
 
       it 'captures the name' do
-        expect(parser.refs.first.name).to eq 'matz'
+        expect(ref_parser.refs.first.name).to eq 'matz'
       end
 
       it 'has no content' do
-        expect(parser.refs.first.content).to be_nil
+        expect(ref_parser.refs.first.content).to be_nil
+      end
+
+      it 'has no content offset' do
+        expect(ref_parser.refs.first.content_offset).to be_nil
       end
     end
 
@@ -86,11 +90,11 @@ RSpec.describe Wikipedia::Wikitext::RefParser do
       let(:wikitext) { '<ref name="matz"/>' }
 
       it 'is self closing' do
-        expect(parser.refs.first).to be_self_closing
+        expect(ref_parser.refs.first).to be_self_closing
       end
 
       it 'captures the name' do
-        expect(parser.refs.first.name).to eq 'matz'
+        expect(ref_parser.refs.first.name).to eq 'matz'
       end
     end
 
@@ -98,15 +102,15 @@ RSpec.describe Wikipedia::Wikitext::RefParser do
       let(:wikitext) { '<ref group="lower-alpha" name="note">A note</ref>' }
 
       it 'captures the group' do
-        expect(parser.refs.first.group).to eq 'lower-alpha'
+        expect(ref_parser.refs.first.group).to eq 'lower-alpha'
       end
 
       it 'captures the name alongside the group' do
-        expect(parser.refs.first.name).to eq 'note'
+        expect(ref_parser.refs.first.name).to eq 'note'
       end
 
       it 'has (a) group' do
-        expect(parser.refs.first.group?).to be true
+        expect(ref_parser.refs.first.group?).to be true
       end
     end
 
@@ -114,7 +118,7 @@ RSpec.describe Wikipedia::Wikitext::RefParser do
       let(:wikitext) { '<ref>A source</ref>' }
 
       it 'does not have a group' do
-        expect(parser.refs.first.group?).to be false
+        expect(ref_parser.refs.first.group?).to be false
       end
     end
 
@@ -122,11 +126,11 @@ RSpec.describe Wikipedia::Wikitext::RefParser do
       let(:wikitext) { '<REF NAME="matz">Matsumoto</REF>' }
 
       it 'extracts the ref' do
-        expect(parser.refs.size).to eq 1
+        expect(ref_parser.refs.size).to eq 1
       end
 
       it 'captures the name from the uppercase attribute' do
-        expect(parser.refs.first.name).to eq 'matz'
+        expect(ref_parser.refs.first.name).to eq 'matz'
       end
     end
 
@@ -141,11 +145,11 @@ RSpec.describe Wikipedia::Wikitext::RefParser do
       end
 
       it 'extracts the ref' do
-        expect(parser.refs.size).to eq 1
+        expect(ref_parser.refs.size).to eq 1
       end
 
       it 'captures the full multi-line content' do
-        expect(parser.refs.first.content).to include 'title=Programming Ruby'
+        expect(ref_parser.refs.first.content).to include 'title=Programming Ruby'
       end
     end
 
@@ -153,7 +157,7 @@ RSpec.describe Wikipedia::Wikitext::RefParser do
       let(:wikitext) { '<ref>A source</ref >' }
 
       it 'extracts the ref' do
-        expect(parser.refs.size).to eq 1
+        expect(ref_parser.refs.size).to eq 1
       end
     end
 
@@ -163,15 +167,31 @@ RSpec.describe Wikipedia::Wikitext::RefParser do
       end
 
       it 'extracts every ref' do
-        expect(parser.refs.size).to eq 3
+        expect(ref_parser.refs.size).to eq 3
       end
 
       it 'preserves document order' do
-        expect(parser.refs.map(&:content)).to eq ['First', 'Second', nil]
+        expect(ref_parser.refs.map(&:content)).to eq ['First', 'Second', nil]
       end
 
       it 'records the offset of each ref' do
-        expect(parser.refs.map(&:offset)).to eq [3, 32, 55]
+        expect(ref_parser.refs.map(&:offset)).to eq [3, 32, 55]
+      end
+    end
+
+    context 'with attributes widening the opening tag' do
+      let(:wikitext) { 'Body<ref name="a">Content</ref>' }
+
+      it 'points the content offset at the first byte after the opening tag' do
+        expect(ref_parser.refs.first.content_offset).to eq wikitext.byteindex('Content')
+      end
+    end
+
+    context 'with non-ASCII text in the attributes' do
+      let(:wikitext) { '<ref name="café">Content</ref>' }
+
+      it 'counts the content offset in bytes' do
+        expect(ref_parser.refs.first.content_offset).to eq wikitext.byteindex('Content')
       end
     end
 
@@ -179,11 +199,11 @@ RSpec.describe Wikipedia::Wikitext::RefParser do
       let(:wikitext) { 'Real<ref>A source</ref> <!-- <ref>A commented out source</ref> -->' }
 
       it 'ignores the commented out ref' do
-        expect(parser.refs.size).to eq 1
+        expect(ref_parser.refs.size).to eq 1
       end
 
       it 'extracts only the real ref' do
-        expect(parser.refs.first.content).to eq 'A source'
+        expect(ref_parser.refs.first.content).to eq 'A source'
       end
     end
 
@@ -199,7 +219,7 @@ RSpec.describe Wikipedia::Wikitext::RefParser do
       end
 
       it 'ignores every ref inside the comment' do
-        expect(parser.refs.size).to eq 1
+        expect(ref_parser.refs.size).to eq 1
       end
     end
 
@@ -207,11 +227,11 @@ RSpec.describe Wikipedia::Wikitext::RefParser do
       let(:wikitext) { '<ref>A source<!-- an editor note --></ref>' }
 
       it 'still extracts the ref' do
-        expect(parser.refs.size).to eq 1
+        expect(ref_parser.refs.size).to eq 1
       end
 
       it 'preserves the comment in the content' do
-        expect(parser.refs.first.content).to eq 'A source<!-- an editor note -->'
+        expect(ref_parser.refs.first.content).to eq 'A source<!-- an editor note -->'
       end
     end
 
@@ -219,7 +239,7 @@ RSpec.describe Wikipedia::Wikitext::RefParser do
       let(:wikitext) { 'Real<ref>A source</ref> <nowiki><ref>Not a real ref</ref></nowiki>' }
 
       it 'ignores the ref inside nowiki' do
-        expect(parser.refs.size).to eq 1
+        expect(ref_parser.refs.size).to eq 1
       end
     end
 
@@ -227,7 +247,7 @@ RSpec.describe Wikipedia::Wikitext::RefParser do
       let(:wikitext) { 'Real<ref>A source</ref> <pre><ref>Not a real ref</ref></pre>' }
 
       it 'ignores the ref inside pre' do
-        expect(parser.refs.size).to eq 1
+        expect(ref_parser.refs.size).to eq 1
       end
     end
 
@@ -235,7 +255,7 @@ RSpec.describe Wikipedia::Wikitext::RefParser do
       let(:wikitext) { 'A comparison of 3 < 5 and 10 > 2.<ref>A source</ref>' }
 
       it 'extracts the ref' do
-        expect(parser.refs.size).to eq 1
+        expect(ref_parser.refs.size).to eq 1
       end
     end
 
@@ -243,7 +263,7 @@ RSpec.describe Wikipedia::Wikitext::RefParser do
       let(:wikitext) { '<ref>{{cite web|url=http://example.com/?a=1&b=2}}</ref>' }
 
       it 'preserves the ampersand rather than escaping it' do
-        expect(parser.refs.first.content).to eq '{{cite web|url=http://example.com/?a=1&b=2}}'
+        expect(ref_parser.refs.first.content).to eq '{{cite web|url=http://example.com/?a=1&b=2}}'
       end
     end
 
@@ -251,7 +271,7 @@ RSpec.describe Wikipedia::Wikitext::RefParser do
       let(:wikitext) { '<ref>The value a < b holds</ref>' }
 
       it 'preserves the bare angle bracket' do
-        expect(parser.refs.first.content).to eq 'The value a < b holds'
+        expect(ref_parser.refs.first.content).to eq 'The value a < b holds'
       end
     end
 
@@ -259,7 +279,7 @@ RSpec.describe Wikipedia::Wikitext::RefParser do
       let(:wikitext) { '<ref></ref>' }
 
       it 'captures empty content' do
-        expect(parser.refs.first.content).to eq ''
+        expect(ref_parser.refs.first.content).to eq ''
       end
     end
 
@@ -267,11 +287,11 @@ RSpec.describe Wikipedia::Wikitext::RefParser do
       let(:wikitext) { 'Body<ref>A source</ref> <references />' }
 
       it 'does not treat the container as a ref' do
-        expect(parser.refs.size).to eq 1
+        expect(ref_parser.refs.size).to eq 1
       end
 
       it 'extracts only the real ref' do
-        expect(parser.refs.first.content).to eq 'A source'
+        expect(ref_parser.refs.first.content).to eq 'A source'
       end
     end
 
@@ -279,7 +299,7 @@ RSpec.describe Wikipedia::Wikitext::RefParser do
       let(:wikitext) { '<ref>A source</ref> <references group="lower-alpha" responsive="1" />' }
 
       it 'does not treat the container as a ref' do
-        expect(parser.refs.size).to eq 1
+        expect(ref_parser.refs.size).to eq 1
       end
     end
 
@@ -287,11 +307,11 @@ RSpec.describe Wikipedia::Wikitext::RefParser do
       let(:wikitext) { 'Body<ref name="a">A source</ref> <references><ref name="b">Defined here</ref></references>' }
 
       it 'extracts the inline ref and the list defined ref' do
-        expect(parser.refs.map(&:name)).to eq %w[a b]
+        expect(ref_parser.refs.map(&:name)).to eq %w[a b]
       end
 
       it 'does not swallow the list defined ref into the container' do
-        expect(parser.refs.map(&:content)).to eq ['A source', 'Defined here']
+        expect(ref_parser.refs.map(&:content)).to eq ['A source', 'Defined here']
       end
     end
   end
@@ -301,7 +321,7 @@ RSpec.describe Wikipedia::Wikitext::RefParser do
       let(:wikitext) { '<ref>A source</ref><ref name="a" />' }
 
       it 'is empty' do
-        expect(parser.unclosed).to be_empty
+        expect(ref_parser.unclosed).to be_empty
       end
     end
 
@@ -309,19 +329,19 @@ RSpec.describe Wikipedia::Wikitext::RefParser do
       let(:wikitext) { 'Text<ref>An unclosed source' }
 
       it 'reports the unclosed ref' do
-        expect(parser.unclosed.size).to eq 1
+        expect(ref_parser.unclosed.size).to eq 1
       end
 
       it 'records where the unclosed ref started' do
-        expect(parser.unclosed.first.offset).to eq 4
+        expect(ref_parser.unclosed.first.offset).to eq 4
       end
 
       it 'captures the remaining text as content' do
-        expect(parser.unclosed.first.content).to eq 'An unclosed source'
+        expect(ref_parser.unclosed.first.content).to eq 'An unclosed source'
       end
 
       it 'does not include it among the well formed refs' do
-        expect(parser.refs).to be_empty
+        expect(ref_parser.refs).to be_empty
       end
     end
 
@@ -329,7 +349,7 @@ RSpec.describe Wikipedia::Wikitext::RefParser do
       let(:wikitext) { 'Text<ref name="matz">An unclosed source' }
 
       it 'captures the name' do
-        expect(parser.unclosed.first.name).to eq 'matz'
+        expect(ref_parser.unclosed.first.name).to eq 'matz'
       end
     end
 
@@ -337,11 +357,11 @@ RSpec.describe Wikipedia::Wikitext::RefParser do
       let(:wikitext) { 'A<ref>Closed</ref> B<ref>Unclosed' }
 
       it 'still extracts the closed ref' do
-        expect(parser.refs.map(&:content)).to eq ['Closed']
+        expect(ref_parser.refs.map(&:content)).to eq ['Closed']
       end
 
       it 'reports the unclosed ref' do
-        expect(parser.unclosed.map(&:content)).to eq ['Unclosed']
+        expect(ref_parser.unclosed.map(&:content)).to eq ['Unclosed']
       end
     end
   end

@@ -22,6 +22,8 @@ SimpleCov.start { minimum_coverage 90 }
 require_relative '../lib/wikipedia/api'
 require_relative '../lib/wikipedia/client'
 require_relative '../lib/wikipedia/wikitext/ref_parser'
+require_relative '../lib/wikipedia/wikitext/template_parser'
+require_relative '../lib/wikipedia/wikitext/document'
 require_relative 'support/webmock'
 
 RSpec.configure do |config|
