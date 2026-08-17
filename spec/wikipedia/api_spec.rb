@@ -134,6 +134,22 @@ RSpec.describe Wikipedia::API do
       end
     end
 
+    context 'when the response indicates a missing page' do
+      before do
+        stub_request(:get, client.api_endpoint)
+          .with(query: hash_including(titles: title))
+          .to_return(
+            status: 200,
+            body: { query: { pages: [{ title:, missing: true }] } }.to_json,
+            headers: { 'Content-Type' => 'application/json' }
+          )
+      end
+
+      it 'raises Wikipedia::Exceptions::NotFoundException' do
+        expect { client.make_request title }.to raise_error Wikipedia::Exceptions::NotFoundException
+      end
+    end
+
     context 'when the response is 404' do
       before do
         stub_request(:get, client.api_endpoint)
@@ -141,8 +157,8 @@ RSpec.describe Wikipedia::API do
           .to_return(status: 404)
       end
 
-      it 'raises Wikipedia::Exceptions::NotFoundException' do
-        expect { client.make_request title }.to raise_error Wikipedia::Exceptions::NotFoundException
+      it 'raises Wikipedia::Exceptions::UnexpectedResponseException rather than assuming a missing page' do
+        expect { client.make_request title }.to raise_error Wikipedia::Exceptions::UnexpectedResponseException
       end
     end
 
