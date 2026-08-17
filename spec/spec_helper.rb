@@ -16,6 +16,9 @@
 #
 # See https://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 require 'httparty'
+require 'simplecov'
+SimpleCov.start
+
 require_relative '../lib/wikipedia/api'
 require_relative '../lib/wikipedia/client'
 require_relative '../lib/wikipedia/wikitext/ref_parser'
