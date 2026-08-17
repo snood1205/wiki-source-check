@@ -17,7 +17,7 @@
 # See https://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 require 'httparty'
 require 'simplecov'
-SimpleCov.start
+SimpleCov.start { minimum_coverage 90 }
 
 require_relative '../lib/wikipedia/api'
 require_relative '../lib/wikipedia/client'
