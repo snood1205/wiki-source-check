@@ -2,16 +2,17 @@
 
 source 'https://rubygems.org'
 
-# gem "rails"
-
-gem 'httparty', '~> 0.24.2'
+gem 'httparty', '~> 0.24'
 
 group :development do
-  gem 'irb'
-  gem 'rubocop'
+  gem 'irb', '~> 1.18'
+  gem 'rubocop', '~> 1.89'
+  gem 'rubocop-rspec', '~> 3.10'
 end
 
-gem 'rspec', '~> 3.13', group: :test
-gem 'webmock', '~> 3.26', group: :test
+group :test do
+  gem 'rspec', '~> 3.13'
+  gem 'webmock', '~> 3.26'
+end
 
-gem 'rubocop-rspec', '~> 3.10', group: :development
+
