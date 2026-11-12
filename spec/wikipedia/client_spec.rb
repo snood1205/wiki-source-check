@@ -78,9 +78,15 @@ RSpec.describe Wikipedia::Client do
 
   describe '#get_wikitext when the page is missing' do
     before do
+      client.logger = Logger.new File::NULL
+
       stub_request(:get, client.api_endpoint)
         .with(query: hash_including(titles: title))
-        .to_return(status: 404)
+        .to_return(
+          status: 200,
+          body: { query: { pages: [{ title:, missing: true }] } }.to_json,
+          headers: { 'Content-Type' => 'application/json' }
+        )
     end
 
     it 'propagates the not found exception' do

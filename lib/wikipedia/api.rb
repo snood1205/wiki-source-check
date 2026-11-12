@@ -52,14 +52,22 @@ module Wikipedia
 
     def handle_response(response, title, retries, additional_params)
       case response.code
-      when 200 then response.parsed_response
+      when 200 then handle200 response, title
       when 429 then handle429 response, title, retries, additional_params
-      when 404 then raise Exceptions::NotFoundException, "Wikipedia has no page at [[#{title}]]"
       when 500..599 then raise Exceptions::ServerError, "Wikipedia returned #{response.code} for [[#{title}]]"
       else raise Exceptions::UnexpectedResponseException,
                  "Wikipedia returned an unhandled #{response.code} for [[#{title}]]"
       end
     end
+
+    def handle200(response, title)
+      parsed = response.parsed_response
+      raise Exceptions::NotFoundException, "Wikipedia has no page at [[#{title}]]" if missing_page? parsed
+
+      parsed
+    end
+
+    def missing_page?(parsed) = parsed.dig('query', 'pages', 0, 'missing') == true
 
     def handle429(response, title, retries, additional_params)
       raise Exceptions::MaxRetriesException if retries >= MAX_RETRIES
